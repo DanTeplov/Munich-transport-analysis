@@ -85,7 +85,7 @@ print(all_stations_in_Munich.shape)
 
 terminate = False
 try:
-    with open(f'Saved trips\old_trips.pickle', 'rb') as file:
+    with open(f'saved_trips\old_trips.pickle', 'rb') as file:
         old_trips = pickle.load(file)
         print("old_trips.pickle file found")
 except: 
@@ -96,12 +96,12 @@ except:
 while not terminate:
     try:
         new_trips, number_trips_saved = get_new_trips(all_stations_in_Munich, datetime.datetime.now() - datetime.timedelta(minutes=15), old_trips=old_trips)
-        with open(f'Saved trips/saved_trips_{datetime.datetime.now().year}_{datetime.datetime.now().month}_' \
+        with open(f'saved_trips/saved_trips_{datetime.datetime.now().year}_{datetime.datetime.now().month}_' \
                 + f'{datetime.datetime.now().day}_{datetime.datetime.now().hour}_' \
                 + f'{datetime.datetime.now().minute}.pickle', 'wb') as file:
             pickle.dump(new_trips, file, protocol=pickle.HIGHEST_PROTOCOL)
         
-        with open(f'Saved trips/old_trips.pickle', 'wb') as file:
+        with open(f'saved_trips/old_trips.pickle', 'wb') as file:
             pickle.dump(new_trips, file, protocol=pickle.HIGHEST_PROTOCOL)
 
         old_trips = new_trips

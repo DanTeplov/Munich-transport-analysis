@@ -7,13 +7,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-data_folders = ["Saved trips", "From_AWS"]
+data_folders = ["saved_trips", "From_AWS"]
 standardized_data_file = "standardized_data.pickle"
 
 standardized_data = create_or_load_standardized_data(data_folders, standardized_data_file)
 
 all_transport_types = ['ICE', 'STR', 'Bus', 'U', 'RE', 'NJ', 'BRB', 'EN']
-allowed_transports = ["STR", "Bus", "U"] # Types of transport that interest us
+allowed_transports = ["STR"] # Types of transport that interest us
 min_record_threshold = 3  # Minimum number of records to include a route in the analysis
 
 
@@ -49,7 +49,10 @@ def analyze_delays_by_time_of_day_for_each_transport(standardized_data):
         plt.title(f"{t}: Average delay by hours of the day", fontsize=14)
         plt.xticks(range(0, 24))
         plt.tight_layout()
-        plt.show()
+        # plt.show()
+
+        # Saving a graph to a file instead of displaying it
+        plt.savefig("average_delay_by_time.png")  # Save the graph to a file
 
 
 def analyze_delays_heatmap_for_each_transport(standardized_data):
@@ -101,7 +104,10 @@ def analyze_delays_heatmap_for_each_transport(standardized_data):
         plt.xlabel("Day of the week")
         plt.ylabel("Time of day")
         plt.tight_layout()
-        plt.show()
+        # plt.show()
+
+        # Saving a graph to a file instead of displaying it
+        plt.savefig("heatmap.png")  # Save the graph to a file
 
 
 analyze_delays_by_time_of_day_for_each_transport(filtered_data)

@@ -38,7 +38,7 @@ def load_all_trips(data_directories):
     return all_trips
 
 # Data folders
-data_folders = ["Saved trips", "From_AWS"]
+data_folders = ["saved_trips", "From_AWS"]
 
 # Loading all data
 all_trips_data = load_all_trips(data_folders)
@@ -141,17 +141,21 @@ if filtered_routes:
     routes = [route for route, _ in sorted_routes[:20]]
     delays = [filtered_routes[route] for route in routes]  # Average delays for top 20 routes
 
-    # Visualization of average delay by route with number of unique flights
+
+    # Average delay by route graph
     plt.figure(figsize=(14, 8))
     plt.barh(routes, delays, color='steelblue', edgecolor='black')
     for i, route in enumerate(routes):
-        plt.text(delays[i], i, f'{route_unique_trips[route]} routes', va='center', fontsize=9, color='black')
+        plt.text(delays[i], i, f' {route_unique_trips[route]} trips', va='center', fontsize=9, color='black')
     plt.xlabel('Average delay (minutes)', fontsize=12)
     plt.ylabel('Routes', fontsize=12)
     plt.title('Average route delay (top 20)', fontsize=14)
     plt.gca().invert_yaxis()
     plt.tight_layout()
     plt.show()
+
+    # # Saving a graph to a file instead of displaying it
+    # plt.savefig("average_delay_by_route.png")  # Save the graph to a file
 else:
     print("No data to plot average delay.")
 
@@ -162,9 +166,6 @@ filtered_frequency_data = [
     for route, freq in sorted_routes_frequency
     if route in filtered_routes and freq > 0  # We only consider routes with delays
 ]
-
-# How does the delays distribution look like
-# print(route_delays[filtered_frequency_data[0][0]])
 
 if not filtered_frequency_data:
     print("There is no data to plot the graph.")
@@ -179,7 +180,7 @@ else:
         for i, route in enumerate(routes_freq):
             # Checking if there is data on unique trips
             unique_trips = route_unique_trips.get(route, 0)
-            plt.text(frequencies[i], i, f'{unique_trips} rotes', va='center', fontsize=9, color='black')
+            plt.text(frequencies[i], i, f' {unique_trips} trips', va='center', fontsize=9, color='black')
 
         plt.xlabel('Number of delays', fontsize=12)
         plt.ylabel('Routes', fontsize=12)
@@ -188,6 +189,10 @@ else:
         plt.tight_layout()
 
         plt.show()
+
+        # # Saving a graph to a file instead of displaying it
+        # plt.savefig("delay_frequency_by_route.png")  # Save the graph to a file
+        
 
     except Exception as e:
         print(f"Error while plotting the graph: {e}")
@@ -210,13 +215,16 @@ percentages = [delay_percentages[route] for route in routes_percent]
 plt.figure(figsize=(14, 8))
 plt.barh(routes_percent, percentages, color='gold', edgecolor='black')
 for i, route in enumerate(routes_percent):
-    plt.text(percentages[i], i, f'{route_unique_trips[route]} rotes', va='center', fontsize=9, color='black')
+    plt.text(percentages[i], i, f' {route_unique_trips[route]} trips', va='center', fontsize=9, color='black')
 plt.xlabel('Delay percentage (%)', fontsize=12)
 plt.ylabel('Rotes', fontsize=12)
 plt.title('Percentage of delays by routes (top 20)', fontsize=14)
 plt.gca().invert_yaxis()
 plt.tight_layout()
 plt.show()
+
+# # Saving a graph to a file instead of displaying it
+# plt.savefig("delay_percentage_by_route.png")  # Save the graph to a file
 
 # Cancellation rate chart
 sorted_cancellations = sorted(
@@ -234,8 +242,7 @@ ax.barh(routes_cancel, cancellations, color='tomato', edgecolor='black')
 
 for i, route in enumerate(routes_cancel):
     unique_trips = route_unique_trips.get(route, 0)  # Number of unique routes
-    annotation = f'{unique_trips} unique routes' 
-    ax.text(cancellations[i], i, annotation, va='center', fontsize=9, color='black')
+    ax.text(cancellations[i], i, f' {unique_trips} trips', va='center', fontsize=9, color='black')
 
 ax.set_xlabel('Number of cancellations', fontsize=12)
 ax.set_ylabel('Routes', fontsize=12)
@@ -246,5 +253,5 @@ fig.tight_layout()
 plt.show()
 
 # # Saving a graph to a file instead of displaying it
-# plt.savefig("cancellations_per_route.png")  # Save the graph to a file
-# plt.close(fig)
+# plt.savefig("cancellations_by_route.png")  # Save the graph to a file
+# # plt.close(fig)
