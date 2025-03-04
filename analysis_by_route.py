@@ -63,9 +63,9 @@ delay_threshold = 1  # Minimum delay to be taken into account in charts (in minu
 
 
 # We collect data on delays, flights and cancellations
-route_delays = {}
-route_total_stops = {} 
-route_cancellations = {} 
+route_delays = {} # Contains all delays on all stations of all rotes
+route_total_stops = {} # Contains all stops on all stations
+route_cancellations = {} # Counts all cancelled stops
 route_unique_trips = {} 
 
 for route, stations in all_trips_data.items():
@@ -119,27 +119,28 @@ for route, stations in all_trips_data.items():
 
 
 # Calculate the average delay, delay frequency and delay percentage
-average_delays = {route: sum(route_delays[route]) / route_total_stops[route] for route in route_delays}
-filtered_delays = {route: [d for d in route_delays[route] if d > delay_threshold] for route in route_delays}
+average_delays = {route: sum(route_delays[route]) / route_total_stops[route] for route in route_delays if route_unique_trips.get(route, 0) >= min_record_threshold}
+filtered_delays = {route: [d for d in route_delays[route] if d >= delay_threshold] for route in route_delays if route_unique_trips.get(route, 0) >= min_record_threshold}
 delay_frequencies = {route: len(filtered_delays[route]) for route in filtered_delays}
 delay_percentages = {
-    route: (len(filtered_delays[route]) / route_total_stops[route]) * 100 if route_total_stops[route] > 0 else 0
-    for route in filtered_delays
+    route: (delay_frequencies[route] / route_total_stops[route]) * 100 if route_unique_trips[route] > 0 else 0
+    for route in delay_frequencies
 }
 
-# Filter routes by the minimum number of trips
-filtered_routes = {
-    route: avg_delay
-    for route, avg_delay in average_delays.items()
-    if route_unique_trips.get(route, 0) >= min_record_threshold
-}
-print(f"Number of routes after filtering: {len(filtered_routes)}")
+# Look at the calculations:
+# name = next(iter(delay_percentages))
+# print(f"delay_frequencies[{name}]: {delay_frequencies[name]}")
+# print(f"route_total_stops[{name}]: {route_total_stops[name]}")
+# print(f"route_unique_trips[{name}]: {route_unique_trips[name]}")
+# print(delay_percentages[name])
 
-if filtered_routes:
+print(f"Number of routes after filtering: {len(average_delays)}")
+
+if average_delays:
     # Sort routes by average delay
-    sorted_routes = sorted(filtered_routes.items(), key=lambda x: x[1], reverse=True)
+    sorted_routes = sorted(average_delays.items(), key=lambda x: x[1], reverse=True)
     routes = [route for route, _ in sorted_routes[:20]]
-    delays = [filtered_routes[route] for route in routes]  # Average delays for top 20 routes
+    delays = [average_delays[route] for route in routes]  # Average delays for top 20 routes
 
 
     # Average delay by route graph
@@ -152,19 +153,20 @@ if filtered_routes:
     plt.title('Average route delay (top 20)', fontsize=14)
     plt.gca().invert_yaxis()
     plt.tight_layout()
-    plt.show()
+    # plt.show()
 
-    # # Saving a graph to a file instead of displaying it
-    # plt.savefig("average_delay_by_route.png")  # Save the graph to a file
+    # Saving a graph to a file instead of displaying it
+    plt.savefig("average_delay_by_route.png")  # Save the graph to a file
 else:
     print("No data to plot average delay.")
+
 
 # Delay frequency graph
 sorted_routes_frequency = sorted(delay_frequencies.items(), key=lambda x: x[1], reverse=True)
 filtered_frequency_data = [
     (route, freq)
     for route, freq in sorted_routes_frequency
-    if route in filtered_routes and freq > 0  # We only consider routes with delays
+    if route in average_delays and freq > 0  # We only consider routes with delays
 ]
 
 if not filtered_frequency_data:
@@ -188,29 +190,18 @@ else:
         plt.gca().invert_yaxis()
         plt.tight_layout()
 
-        plt.show()
+        # plt.show()
 
-        # # Saving a graph to a file instead of displaying it
-        # plt.savefig("delay_frequency_by_route.png")  # Save the graph to a file
+        # Saving a graph to a file instead of displaying it
+        plt.savefig("delay_frequency_by_route.png")  # Save the graph to a file
         
 
     except Exception as e:
         print(f"Error while plotting the graph: {e}")
 
-# Calculating the percentage of delays
-delay_percentages = {
-    route: (len(filtered_delays[route]) / route_total_stops[route]) * 100 if route_total_stops[route] > 0 else 0
-    for route in filtered_delays
-}
-
-# for route, delays in route_delays.items():
-#     print(f"Маршрут: {route}, общее количество задержек: {len(delays)}")
-#     print(f"После фильтра: {len(filtered_delays.get(route, []))}")
-
 # Delay percentage plot
 sorted_routes_percentage = sorted(delay_percentages.items(), key=lambda x: x[1], reverse=True)
-routes_percent = [route for route, _ in sorted_routes_percentage if route in route_unique_trips][:20] # route_unique_trips to check, if the transport is allowed
-percentages = [delay_percentages[route] for route in routes_percent]
+routes_percent, percentages = zip(*sorted_routes_percentage[:20])  # Top 20 routes
 
 plt.figure(figsize=(14, 8))
 plt.barh(routes_percent, percentages, color='gold', edgecolor='black')
@@ -221,12 +212,13 @@ plt.ylabel('Rotes', fontsize=12)
 plt.title('Percentage of delays by routes (top 20)', fontsize=14)
 plt.gca().invert_yaxis()
 plt.tight_layout()
-plt.show()
+# plt.show()
 
-# # Saving a graph to a file instead of displaying it
-# plt.savefig("delay_percentage_by_route.png")  # Save the graph to a file
+# Saving a graph to a file instead of displaying it
+plt.savefig("delay_percentage_by_route.png")  # Save the graph to a file
 
 # Cancellation rate chart
+# Divided all cancelled stops by number of stops in the route
 sorted_cancellations = sorted(
     [(route, route_cancellations[route] / len(all_trips_data[route])) for route in route_cancellations],
     key=lambda x: x[1],
@@ -234,8 +226,7 @@ sorted_cancellations = sorted(
 )
 
 # Top 20 routes
-routes_cancel = [route for route, _ in sorted_cancellations][:20]
-cancellations = [cancel_per_station for _, cancel_per_station in sorted_cancellations][:20]
+routes_cancel, cancellations = zip(*sorted_cancellations[:20])  # Top 20 routes 
 
 fig, ax = plt.subplots(figsize=(14, 8))
 ax.barh(routes_cancel, cancellations, color='tomato', edgecolor='black')
@@ -250,8 +241,8 @@ ax.set_title('Number of cancellations by route (top 20)', fontsize=14)
 ax.invert_yaxis()
 fig.tight_layout()
 
-plt.show()
+# plt.show()
 
-# # Saving a graph to a file instead of displaying it
-# plt.savefig("cancellations_by_route.png")  # Save the graph to a file
+# Saving a graph to a file instead of displaying it
+plt.savefig("cancellations_by_route.png")  # Save the graph to a file
 # # plt.close(fig)
